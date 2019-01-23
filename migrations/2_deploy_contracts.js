@@ -1,4 +1,5 @@
 const Token = artifacts.require("./Token");
+const SmartEscrow = artifacts.require("./SmartEscrow");
 
 module.exports = function(deployer) {
   const nameA = "Token A";
@@ -11,6 +12,6 @@ module.exports = function(deployer) {
 
   deployer.deploy(Token, nameA, symbolA, decimals, total).then(async () => {
 
-  await deployer.deploy(Token, nameB, symbolB, decimals, total);
+  await deployer.deploy(SmartEscrow);
   })
 };

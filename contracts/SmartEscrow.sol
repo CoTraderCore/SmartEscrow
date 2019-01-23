@@ -8,6 +8,13 @@ mapping(address => uint256) public orders;
 
 address[] public tokens;
 
+// Kyber helps to figure out the ratio
+KyberNetworkInterface kyber;
+
+constructor(address _kyber) public {
+  kyber = KyberNetworkInterface(_kyber);
+}
+
 
 function createOrder(address _token, uint256 _amount) public {
   ERC20 token = ERC20(_token);
@@ -17,10 +24,14 @@ function createOrder(address _token, uint256 _amount) public {
   orders[msg.sender] = _amount;
 }
 
+// TODO execude orders[msg.sender] in Rate A to B
+
 function execudeOrder(address _token) public {
   uint256 amount = orders[msg.sender];
 
   ERC20 token = ERC20(_token);
+
+  // uint256 _value = kyber.getExpectedRate(addressTokenA, addressTokenB, orders[msg.sender]);
 
   token.transfer(msg.sender, orders[msg.sender]);
 

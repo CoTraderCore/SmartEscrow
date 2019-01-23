@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "./KyberNetworkInterface.sol";
 
 contract SmartEscrow {
 
@@ -8,7 +9,7 @@ mapping(address => uint256) public orders;
 
 address[] public tokens;
 
-// Kyber helps to figure out the ratio
+// Kyber helps to figure out the ratio beetwen A and B token
 KyberNetworkInterface kyber;
 
 constructor(address _kyber) public {
@@ -24,16 +25,21 @@ function createOrder(address _token, uint256 _amount) public {
   orders[msg.sender] = _amount;
 }
 
-// TODO execude orders[msg.sender] in Rate A to B
+function getValue(address _tokenA, address _tokenB, uint256 _value) public view returns(uint256){
+  (uint256 expectedRate, ) = kyber.getExpectedRate(ERC20(_tokenA), ERC20(_tokenB), _value);
 
-function execudeOrder(address _token) public {
+  return expectedRate;
+}
+
+
+function execudeOrder(address _tokenA, address _tokenB) public {
   uint256 amount = orders[msg.sender];
 
-  ERC20 token = ERC20(_token);
+  ERC20 token = ERC20(_tokenB);
 
-  // uint256 _value = kyber.getExpectedRate(addressTokenA, addressTokenB, orders[msg.sender]);
+  uint256 _value = getValue(_tokenA, _tokenB, orders[msg.sender]);
 
-  token.transfer(msg.sender, orders[msg.sender]);
+  token.transfer(msg.sender, _value);
 
   orders[msg.sender] = 0;
 }

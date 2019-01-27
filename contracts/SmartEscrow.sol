@@ -10,6 +10,7 @@ struct Orders{
   uint256 amount;
   address TokenA;
   address TokenB;
+  address receiver;
 }
 
 mapping(address => Orders) public orders;
@@ -25,18 +26,19 @@ constructor(address _kyber) public {
 
 
 function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
-  ERC20 token = ERC20(_token);
+  ERC20 tokenA = ERC20(_tokenA);
 
-  token.transferFrom(msg.sender, address(this), _amount);
+  tokenA.transferFrom(msg.sender, address(this), _amount);
 
-  var order = Orders[msg.sender];
+  var order = orders[msg.sender];
 
-  //uint256 _value = getValue(_tokenA, _tokenB, _amount);
-  //order.price = _value;
-  order.price = 10;
+  uint256 _value = getValue(_tokenA, _tokenB, _amount);
+
+  order.price = _value;
   order.amount = _amount;
   order.TokenA = _tokenA;
   order.TokenB = _tokenB;
+  order.receiver = msg.sender;
 
 
   AllOrders.push(msg.sender) -1;
@@ -48,17 +50,28 @@ function getValue(address _tokenA, address _tokenB, uint256 _value) public view 
   return expectedRate;
 }
 
+function getAllOrdersAddress() view public returns (address[]) {
+  return AllOrders;
+}
+
 // Not finished
-function execudeOrder(address _tokenA, address _tokenB) public {
-  uint256 amount = orders[msg.sender];
+function execudeOrder(address _tokenA, address _tokenB, uint256 _value) public {
 
-  ERC20 token = ERC20(_tokenB);
+  ERC20 tokenA = ERC20(_tokenA);
+  ERC20 tokenB = ERC20(_tokenB);
 
-  uint256 _value = getValue(_tokenA, _tokenB, orders[msg.sender]);
+  var order = orders[msg.sender];
 
-  token.transfer(msg.sender, _value);
+  // TODO convert correct rate
+  //uint256 _value = getValue(_tokenA, _tokenB, order.amount);
 
-  //orders[msg.sender] = 0;
+  tokenB.transferFrom(msg.sender, address(this), _value);
+
+  tokenA.transfer(msg.sender, _value);
+
+  tokenB.transfer(order.receiver, _value);
+
+  delete orders[msg.sender];
 }
 
 }

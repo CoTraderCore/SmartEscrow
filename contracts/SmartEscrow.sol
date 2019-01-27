@@ -1,9 +1,13 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./KyberNetworkInterface.sol";
 
+
 contract SmartEscrow {
+
+using SafeMath for uint256;
 
 struct Orders{
   uint256 price;
@@ -24,7 +28,7 @@ constructor(address _kyber) public {
   kyber = KyberNetworkInterface(_kyber);
 }
 
-
+// Need approve before execude
 function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
   ERC20 tokenA = ERC20(_tokenA);
 
@@ -55,15 +59,16 @@ function getAllOrdersAddress() view public returns (address[]) {
 }
 
 // Not finished
-function execudeOrder(address _tokenA, address _tokenB, uint256 _value) public {
+// Need approve before execude
+function execudeOrder(address _tokenA, address _tokenB, uint256 _value, address _orderAddress) public {
 
   ERC20 tokenA = ERC20(_tokenA);
   ERC20 tokenB = ERC20(_tokenB);
 
-  var order = orders[msg.sender];
+  var order = orders[_orderAddress];
 
   // TODO convert correct rate
-  //uint256 _value = getValue(_tokenA, _tokenB, order.amount);
+  // uint256 _value = getValue(_tokenA, _tokenB, order.amount);
 
   tokenB.transferFrom(msg.sender, address(this), _value);
 
@@ -71,7 +76,7 @@ function execudeOrder(address _tokenA, address _tokenB, uint256 _value) public {
 
   tokenB.transfer(order.receiver, _value);
 
-  delete orders[msg.sender];
+  order.amount = order.amount.sub(_value);
 }
 
 }

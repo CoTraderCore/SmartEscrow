@@ -5,9 +5,15 @@ import "./KyberNetworkInterface.sol";
 
 contract SmartEscrow {
 
-mapping(address => uint256) public orders;
+struct Orders{
+  uint price;
+  address TokenA;
+  address TokenB;
+}
 
-address[] public tokens;
+mapping(address => Orders) public orders;
+
+address[] public AllOrders;
 
 // Kyber helps to figure out the ratio beetwen A and B token
 KyberNetworkInterface kyber;
@@ -17,12 +23,19 @@ constructor(address _kyber) public {
 }
 
 
-function createOrder(address _token, uint256 _amount) public {
+function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
   ERC20 token = ERC20(_token);
 
   token.transferFrom(msg.sender, address(this), _amount);
 
-  orders[msg.sender] = _amount;
+  var order = Orders[msg.sender];
+
+  order.price = 10;
+  order.TokenA = _tokenA;
+  order.TokenB = _tokenB;
+
+
+  AllOrders.push(msg.sender) -1;
 }
 
 function getValue(address _tokenA, address _tokenB, uint256 _value) public view returns(uint256){
@@ -31,7 +44,7 @@ function getValue(address _tokenA, address _tokenB, uint256 _value) public view 
   return expectedRate;
 }
 
-
+// Not finished
 function execudeOrder(address _tokenA, address _tokenB) public {
   uint256 amount = orders[msg.sender];
 
@@ -41,7 +54,7 @@ function execudeOrder(address _tokenA, address _tokenB) public {
 
   token.transfer(msg.sender, _value);
 
-  orders[msg.sender] = 0;
+  //orders[msg.sender] = 0;
 }
 
 }

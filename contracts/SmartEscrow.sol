@@ -6,7 +6,8 @@ import "./KyberNetworkInterface.sol";
 contract SmartEscrow {
 
 struct Orders{
-  uint price;
+  uint256 price;
+  uint256 amount;
   address TokenA;
   address TokenB;
 }
@@ -30,7 +31,10 @@ function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
 
   var order = Orders[msg.sender];
 
+  //uint256 _value = getValue(_tokenA, _tokenB, _amount);
+  //order.price = _value;
   order.price = 10;
+  order.amount = _amount;
   order.TokenA = _tokenA;
   order.TokenB = _tokenB;
 

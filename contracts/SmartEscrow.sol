@@ -32,7 +32,7 @@ constructor(address _kyber) public {
 function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
   ERC20 tokenA = ERC20(_tokenA);
 
-  tokenA.transferFrom(msg.sender, address(this), _amount);
+  require(tokenA.transferFrom(msg.sender, address(this), _amount));
 
   var order = orders[msg.sender];
 
@@ -60,6 +60,7 @@ function getAllOrdersAddress() view public returns (address[]) {
 
 // Not finished
 // Need approve before execude
+// TODO require compare input and order.price -/+ 5% of Kyber
 function execudeOrder(address _tokenA, address _tokenB, uint256 _value, address _orderAddress) public {
 
   ERC20 tokenA = ERC20(_tokenA);
@@ -67,14 +68,11 @@ function execudeOrder(address _tokenA, address _tokenB, uint256 _value, address 
 
   var order = orders[_orderAddress];
 
-  // TODO convert correct rate
-  // uint256 _value = getValue(_tokenA, _tokenB, order.amount);
+  require(tokenB.transferFrom(msg.sender, address(this), _value));
 
-  tokenB.transferFrom(msg.sender, address(this), _value);
+  require(tokenA.transfer(msg.sender, _value));
 
-  tokenA.transfer(msg.sender, _value);
-
-  tokenB.transfer(order.receiver, _value);
+  require(tokenB.transfer(_orderAddress, _value));
 
   order.amount = order.amount.sub(_value);
 }

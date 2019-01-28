@@ -28,18 +28,21 @@ constructor(address _kyber) public {
   kyber = KyberNetworkInterface(_kyber);
 }
 
+/*
+* @dev create order send A token to contract
+*/
 // Need approve before execude
-function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
+function createOrder(address _tokenA, address _tokenB, uint256 A_amount) public {
   ERC20 tokenA = ERC20(_tokenA);
 
-  require(tokenA.transferFrom(msg.sender, address(this), _amount));
+  require(tokenA.transferFrom(msg.sender, address(this), A_amount));
 
   var order = orders[msg.sender];
 
-  uint256 _value = getValue(_tokenA, _tokenB, _amount);
+  uint256 _value = getValue(_tokenA, _tokenB, A_amount);
 
   order.price = _value;
-  order.amount = _amount;
+  order.amount = A_amount;
   order.TokenA = _tokenA;
   order.TokenB = _tokenB;
   order.receiver = msg.sender;
@@ -51,8 +54,8 @@ function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
 /*
 * @dev get rate ot tokens A/B in Keber exchange
 */
-function getValue(address _tokenA, address _tokenB, uint256 _value) public view returns(uint256){
-  (uint256 expectedRate, ) = kyber.getExpectedRate(ERC20(_tokenA), ERC20(_tokenB), _value);
+function getValue(address _tokenA, address _tokenB, uint256 A_value) public view returns(uint256){
+  (uint256 expectedRate, ) = kyber.getExpectedRate(ERC20(_tokenA), ERC20(_tokenB), A_value);
 
   return expectedRate;
 }
@@ -68,6 +71,7 @@ function getAllOrdersAddress() view public returns (address[]) {
 * @dev get rate A/B in Kyber by order address if order price and curent price
 * does not match -/+ 5% in Kyber return false
 */
+// Need approve before execude
 function priceCorrectness(address _orderAddress)
 view
 public
@@ -89,26 +93,26 @@ returns (bool) {
 /*
 * @dev Ececude order send A to B and B to A
 */
-function execudeOrder(address _tokenA, address _tokenB, uint256 B_value, address _orderAddress) public {
+function execudeOrder(uint256 B_value, address _orderAddress) public {
   // Exception if curent price not relevant -/+ 5% of Kyber
   require(priceCorrectness(_orderAddress));
 
-  ERC20 tokenA = ERC20(_tokenA);
-  ERC20 tokenB = ERC20(_tokenB);
-
   var order = orders[_orderAddress];
-
-  // Get value A in B
-  uint256 A_value = getValue(_tokenA, _tokenB, B_value);
 
   require(order.amount != 0);
 
+  ERC20 tokenA = ERC20(order.TokenA);
+  ERC20 tokenB = ERC20(order.TokenB);
+
+  // Get value A in B rate
+  uint256 A_value = getValue(order.TokenB, order.TokenA, B_value);
+
   require(A_value <= order.amount);
-
+  // Send B token to contract
   require(tokenB.transferFrom(msg.sender, address(this), B_value));
-
+  // Send A token to B user from contract
   require(tokenA.transfer(msg.sender, A_value));
-
+  // SEnd B token to A user from contract
   require(tokenB.transfer(_orderAddress, B_value));
 
   order.amount = order.amount.sub(A_value);

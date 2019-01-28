@@ -48,17 +48,26 @@ function createOrder(address _tokenA, address _tokenB, uint256 _amount) public {
   AllOrders.push(msg.sender) -1;
 }
 
+/*
+* @dev get rate ot tokens A/B in Keber exchange
+*/
 function getValue(address _tokenA, address _tokenB, uint256 _value) public view returns(uint256){
   (uint256 expectedRate, ) = kyber.getExpectedRate(ERC20(_tokenA), ERC20(_tokenB), _value);
 
   return expectedRate;
 }
 
+/*
+* @dev get all curent orders
+*/
 function getAllOrdersAddress() view public returns (address[]) {
   return AllOrders;
 }
 
-// if price does not match -/+ 5% of Kyber return false
+/*
+* @dev get rate A/B in Kyber by order address if order price and curent price
+* does not match -/+ 5% in Kyber return false
+*/
 function priceCorrectness(address _orderAddress)
 view
 public
@@ -77,12 +86,11 @@ returns (bool) {
   }
 }
 
-// Not finished
-// Need approve before execude
-// TODO require compare input and order.price -/+ 5% of Kyber
-function execudeOrder(address _tokenA, address _tokenB, uint256 _value, address _orderAddress) public {
-
-  // need price match -/+ 5% of Kyber
+/*
+* @dev Ececude order send A to B and B to A
+*/
+function execudeOrder(address _tokenA, address _tokenB, uint256 B_value, address _orderAddress) public {
+  // Exception if curent price not relevant -/+ 5% of Kyber
   require(priceCorrectness(_orderAddress));
 
   ERC20 tokenA = ERC20(_tokenA);
@@ -91,15 +99,19 @@ function execudeOrder(address _tokenA, address _tokenB, uint256 _value, address 
   var order = orders[_orderAddress];
 
   // Get value A in B
-  uint256 A_value = getValue(_tokenA, _tokenB, _value);
+  uint256 A_value = getValue(_tokenA, _tokenB, B_value);
 
-  require(tokenB.transferFrom(msg.sender, address(this), A_value));
+  require(order.amount != 0);
 
-  require(tokenA.transfer(msg.sender, _value));
+  require(A_value <= order.amount);
 
-  require(tokenB.transfer(_orderAddress, A_value));
+  require(tokenB.transferFrom(msg.sender, address(this), B_value));
 
-  order.amount = order.amount.sub(_value);
+  require(tokenA.transfer(msg.sender, A_value));
+
+  require(tokenB.transfer(_orderAddress, B_value));
+
+  order.amount = order.amount.sub(A_value);
 }
 
 }
